@@ -1,86 +1,58 @@
-//Working with Leaf taps application and interact with elements on a web page using different locator
+import { test, expect, firefox } from "@playwright/test"
 
-import {test, chromium, expect, firefox} from "@playwright/test"
+test(`To interact with Leaf Taps application`, async ({ browserName }) => {
 
-test(`To interact with Leaf Taps application`,async ({browserName})=> {
+    test.skip(browserName !== 'firefox')
 
-    test.skip(browserName!=='firefox') 
-    
-    const browser   = firefox.launch()
-    const context   = await (await browser).newContext()
-    const page      = await context.newPage()
-    
-    let url = "http://leaftaps.com/opentaps/control/main"
+    const browser = await firefox.launch()
+    const context = await browser.newContext()
+    const page = await context.newPage()
+
+    const url = "http://leaftaps.com/opentaps/control/main"
     await page.goto(url)
+
     await expect(page).toHaveURL(url)
 
-    let username = "DemoCSR"
-    let password = "crmsfa"
-    
-    await page.locator(`#username`).fill(username)
-    await page.locator(`#password`).fill(password)
+    // Login
+    await page.locator("#username").fill("DemoCSR")
+    await page.locator("#password").fill("crmsfa")
+    await page.locator(".decorativeSubmit").click()
 
-    await page.locator(`.decorativeSubmit`).click()
+    // Click CRM/SFA
+    const crmsfa = page.locator("[for='crmsfa']")
+    await crmsfa.waitFor({ state: "visible" })
+    await crmsfa.click()
 
-    const crmsfaWebElement = await page.locator(`[for='crmsfa']`)
+    console.log("Page Title after login:", await page.title())
 
-    await crmsfaWebElement.waitFor({state:"visible"})
+    // Leads
+    const leads = page.locator(".sectionTabButtonUnselected a").first()
+    await leads.waitFor()
+    await leads.click()
 
-    let pageTitle = await page.title()
-    console.log(`Page Title after login: ${pageTitle}`)
-    await expect(page).toHaveTitle(pageTitle)
+    console.log("Page Title after Leads:", await page.title())
 
-    await crmsfaWebElement.click()    
+    // Create Lead
+    const createLead = page.locator(".frameSectionBody li").nth(1)
+    await createLead.waitFor()
+    await createLead.click()
 
-    const leadsWebElement = await page.locator(`.sectionTabButtonUnselected a `).first()
-    await leadsWebElement.waitFor({state:"visible"})
+    console.log("Page Title after clicking Create Lead:", await page.title())
 
-    pageTitle = await page.title()
-    console.log(`Page Title after cmsfa: ${pageTitle}`)
-    await expect(page).toHaveTitle(pageTitle)
+    // Fill form
+    await page.locator("#createLeadForm_companyName").fill("Nagarro Software Pvt. Ltd")
+    await page.locator("#createLeadForm_firstName").fill("Bhavadharini")
+    await page.locator("#createLeadForm_lastName").fill("Duraisamy")
+    await page.locator("[name='personalTitle']").fill("Ms.Bhavadharini")
+    await page.locator("[name='generalProfTitle']").fill("Test Engineer")
+    await page.locator("#createLeadForm_annualRevenue").fill("1000000")
+    await page.locator("#createLeadForm_departmentName").fill("QA")
+    await page.locator("#createLeadForm_primaryPhoneNumber").fill("9894582769")
 
-    await leadsWebElement.click()
+    await page.locator("input[value='Create Lead']").click()
 
-    const createLeadWebElement = await page.locator(`.frameSectionBody li`).nth(1)
-    await createLeadWebElement.waitFor({state:"visible"})
+    const viewLead = page.locator("#sectionHeaderTitle_leads")
+    await viewLead.waitFor()
 
-    pageTitle = await page.title()
-    console.log(`Page Title after clicking on Leads: ${pageTitle}`)
-    await expect(page).toHaveTitle(pageTitle)
-
-    createLeadWebElement.click()
-
-    let companyName     = "Nagarro Software Pvt. Ltd"
-    let firstName       = "Bhavadharini"
-    let lastName        = "Duraisamy"
-    let saluation       = "Ms.Bhavadharini"
-    let leadTitle       = "Test Engineer"
-    let annualRevenue   = 1000000
-    let department      = "QA"
-    let phoneNumber     = 9894582769
-    
-    const createLeadHeaderWebElement = await page.locator(`#sectionHeaderTitle_leads`)
-    await createLeadHeaderWebElement.waitFor({state:"visible"})
-
-    pageTitle = await page.title()
-    console.log(`Page Title after clicking Create Lead button: ${pageTitle}`)
-    await expect(page).toHaveTitle(pageTitle)
-
-    await page.locator(`#createLeadForm_companyName`).fill(companyName)
-    await page.locator(`[id='createLeadForm_firstName']`).fill(firstName)
-    await page.locator(`#createLeadForm_lastName`).fill(lastName)
-    await page.locator(`[name='personalTitle']`).fill(saluation)
-    await page.locator(`[name='generalProfTitle']`).fill(leadTitle)
-    await page.locator(`#createLeadForm_annualRevenue`).fill(annualRevenue.toString())
-    await page.locator(`#createLeadForm_departmentName`).fill(department)
-    await page.locator(`#createLeadForm_primaryPhoneNumber`).fill(phoneNumber.toString())
-
-    await page.locator(`input[value='Create Lead']`).click()
-
-    const viewLeadWebElement = await page.locator(`#sectionHeaderTitle_leads`)
-    await viewLeadWebElement.waitFor({state:"visible"})
-
-    pageTitle = await page.title()
-    console.log(`Page Title after lead creation: ${pageTitle}`)
-    await expect(page).toHaveTitle(pageTitle)
+    console.log("Page Title after lead creation:", await page.title())
 })
